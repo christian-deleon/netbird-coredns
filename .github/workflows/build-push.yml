@@ -9,11 +9,13 @@ on:
       - '*.go'
       - 'go.*'
       - 'docker/Dockerfile'
-      - 'docker/ts-dns/**'
+      - 'cmd/**'
+      - 'internal/**'
+      - 'pkg/**'
 
 env:
   PLATFORMS: linux/amd64,linux/arm64
-  GHCR_IMAGE_URL: ghcr.io/${{ github.actor }}/tailscale-coredns
+  GHCR_IMAGE_URL: ghcr.io/${{ github.actor }}/netbird-coredns
 
 jobs:
   build:
@@ -43,28 +45,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set image tags
-        id: tags
-        run: |
-          SHA="${{ github.sha }}"
-          TAGS="${{ env.GHCR_IMAGE_URL }}:$SHA-${{ matrix.arch }}"
-          echo "tags=$TAGS" >> $GITHUB_OUTPUT
-
       - name: Build and Push Image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: docker/Dockerfile
-          push: false
-          load: true
+          push: true
           platforms: ${{ matrix.platform }}
-          tags: local-image:build
-
-      - name: Push single manifest
-        run: |
-          SHA="${{ github.sha }}"
-          docker tag local-image:build ${{ env.GHCR_IMAGE_URL }}:$SHA-${{ matrix.arch }}
-          docker push ${{ env.GHCR_IMAGE_URL }}:$SHA-${{ matrix.arch }}
+          tags: ${{ env.GHCR_IMAGE_URL }}:${{ github.sha }}-${{ matrix.arch }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   manifest:
     needs: build
