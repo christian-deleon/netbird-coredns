@@ -65,9 +65,9 @@ func getRefreshInterval() time.Duration {
 		if interval, err := strconv.Atoi(intervalStr); err == nil && interval > 0 {
 			return time.Duration(interval) * time.Second
 		}
-		clog.Warningf("invalid NBDNS_REFRESH_INTERVAL value '%s', using default 30 seconds", intervalStr)
+		clog.Warningf("invalid NBDNS_REFRESH_INTERVAL value '%s', using default 15 seconds", intervalStr)
 	}
-	return 30 * time.Second
+	return 15 * time.Second
 }
 
 // periodicRefresh periodically reloads the DNS records from disk
@@ -133,7 +133,6 @@ func (n *NetBird) lookupCustomRecord(queryName string) (record, bool) {
 
 	return rec, true
 }
-
 
 // Name returns the plugin name
 func (n *NetBird) Name() string {

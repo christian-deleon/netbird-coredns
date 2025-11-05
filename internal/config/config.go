@@ -29,7 +29,6 @@ type Config struct {
 func LoadFromEnv() (*Config, error) {
 	config := &Config{}
 
-
 	// Required: Domains
 	domainsStr := os.Getenv("NBDNS_DOMAINS")
 	if domainsStr == "" {
@@ -39,7 +38,6 @@ func LoadFromEnv() (*Config, error) {
 	if len(config.Domains) == 0 {
 		return nil, fmt.Errorf("NBDNS_DOMAINS must contain at least one valid domain")
 	}
-
 
 	// Optional: Forward server
 	config.ForwardTo = os.Getenv("NBDNS_FORWARD_TO")
@@ -80,7 +78,7 @@ func LoadFromEnv() (*Config, error) {
 		}
 		config.RefreshInterval = interval
 	} else {
-		config.RefreshInterval = 30
+		config.RefreshInterval = 15
 	}
 
 	// Optional: Records file

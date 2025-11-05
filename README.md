@@ -43,7 +43,7 @@ NBDNS_DOMAINS=mydomain.com
 NBDNS_FORWARD_TO=8.8.8.8
 NBDNS_API_PORT=8080
 NBDNS_DNS_PORT=5053
-NBDNS_REFRESH_INTERVAL=30
+NBDNS_REFRESH_INTERVAL=15
 ```
 
 4. **Start the service**:
@@ -82,7 +82,7 @@ All environment variables are prefixed with `NBDNS_`:
 | `NBDNS_FORWARD_TO` | No | `8.8.8.8` | Forward server for unresolved queries |
 | `NBDNS_DNS_PORT` | No | `5053` | DNS server port (use different port if 53 is in use) |
 | `NBDNS_API_PORT` | No | `8080` | API server port |
-| `NBDNS_REFRESH_INTERVAL` | No | `30` | Refresh interval in seconds |
+| `NBDNS_REFRESH_INTERVAL` | No | `15` | Refresh interval in seconds |
 | `NBDNS_RECORDS_FILE` | No | `/etc/nb-dns/records/records.json` | Path to DNS records file |
 | `NBDNS_LOG_LEVEL` | No | `info` | Log level for the entire service (debug, info, warn, error) |
 
