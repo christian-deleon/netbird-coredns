@@ -1,0 +1,26 @@
+name: nb-dns
+
+services:
+  nb-dns:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    volumes:
+      - dns-records:/etc/nb-dns/records
+    environment:
+      - NBDNS_DOMAINS=${NBDNS_DOMAINS}
+      - NBDNS_FORWARD_TO=${NBDNS_FORWARD_TO:-8.8.8.8}
+      - NBDNS_DNS_PORT=${NBDNS_DNS_PORT:-5053}
+      - NBDNS_API_PORT=${NBDNS_API_PORT:-8080}
+      - NBDNS_REFRESH_INTERVAL=${NBDNS_REFRESH_INTERVAL:-15}
+      - NBDNS_RECORDS_FILE=${NBDNS_RECORDS_FILE:-/etc/nb-dns/records/records.json}
+      - NBDNS_LOG_LEVEL=${NBDNS_LOG_LEVEL:-info}
+    ports:
+      - "5053:5053/udp"
+      - "5053:5053/tcp"
+      - "8080:8080/tcp"
+    restart: unless-stopped
+
+volumes:
+  dns-records:
+    driver: local
