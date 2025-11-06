@@ -15,7 +15,7 @@ on:
 
 env:
   PLATFORMS: linux/amd64,linux/arm64
-  GHCR_IMAGE_URL: ghcr.io/${{ github.repository_owner }}/netbird-coredns
+  GHCR_IMAGE_URL: ghcr.io/${{ github.actor }}/netbird-coredns
 
 jobs:
   build:
@@ -44,7 +44,7 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
+          username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and Push Image
@@ -61,25 +61,28 @@ jobs:
   manifest:
     needs: build
     runs-on: ubuntu-latest
-    if: always()
     steps:
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v2
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
+          username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create and push manifest
+      - name: Create & push manifest
         run: |
-          TAGS="latest"
-          if [ "${{ github.ref_type }}" = "tag" ]; then
-            TAGS="$TAGS ${{ github.ref_name }}"
-          fi
           SHA="${{ github.sha }}"
-          for TAG in $TAGS; do
-            docker manifest create ${{ env.GHCR_IMAGE_URL }}:$TAG \
-              ${{ env.GHCR_IMAGE_URL }}:$SHA-amd64 \
-              ${{ env.GHCR_IMAGE_URL }}:$SHA-arm64
-            docker manifest push ${{ env.GHCR_IMAGE_URL }}:$TAG
+          IMAGE="${{ env.GHCR_IMAGE_URL }}"
+
+          # Fix: force single-arch digests
+          AMD64=$(docker buildx imagetools inspect $IMAGE:$SHA-amd64 --raw | jq -r '.manifests[0].digest')
+          ARM64=$(docker buildx imagetools inspect $IMAGE:$SHA-arm64 --raw | jq -r '.manifests[0].digest')
+
+          for TAG in latest ${{ github.ref_type == 'tag' && github.ref_name || '' }}; do
+            [[ "$TAG" == "latest" || -n "$TAG" ]] || continue
+            docker manifest create $IMAGE:$TAG \
+              --amend $IMAGE@$AMD64 \
+              --amend $IMAGE@$ARM64
+            docker manifest push $IMAGE:$TAG
+            echo "Pushed $IMAGE:$TAG"
           done
