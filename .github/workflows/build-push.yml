@@ -47,17 +47,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Verify build context
-        run: |
-          echo "Checking build context structure:"
-          ls -la
-          echo "Checking cmd directory:"
-          ls -la cmd/ || echo "cmd/ not found!"
-          echo "Checking internal directory:"
-          ls -la internal/ || echo "internal/ not found!"
-          echo "Checking pkg directory:"
-          ls -la pkg/ || echo "pkg/ not found!"
-
       - name: Build and Push Image
         uses: docker/build-push-action@v5
         with:
