@@ -17,7 +17,7 @@ jobs:
         with:
           version: v3.18.2
 
-      - name: Extract tag and update Chart.yaml
+      - name: Extract tag and update Chart.yaml and values.yaml
         run: |
           # Extract tag (remove 'v' prefix if present)
           TAG="${GITHUB_REF#refs/tags/}"
@@ -27,7 +27,11 @@ jobs:
           sed -i "s/^version:.*/version: $VERSION/" chart/Chart.yaml
           sed -i "s/^appVersion:.*/appVersion: $VERSION/" chart/Chart.yaml
           
+          # Update values.yaml - image tag should include 'v' prefix
+          sed -i "s/^  tag:.*/  tag: $TAG/" chart/values.yaml
+          
           echo "Version: $VERSION"
+          echo "Image tag: $TAG"
 
       - name: Package Helm Chart
         run: |
