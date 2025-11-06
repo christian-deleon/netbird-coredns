@@ -34,6 +34,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -44,6 +46,17 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify build context
+        run: |
+          echo "Checking build context structure:"
+          ls -la
+          echo "Checking cmd directory:"
+          ls -la cmd/ || echo "cmd/ not found!"
+          echo "Checking internal directory:"
+          ls -la internal/ || echo "internal/ not found!"
+          echo "Checking pkg directory:"
+          ls -la pkg/ || echo "pkg/ not found!"
 
       - name: Build and Push Image
         uses: docker/build-push-action@v5
