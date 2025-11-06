@@ -1,11 +1,14 @@
 package process
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -42,6 +45,159 @@ func NewManager(cfg *config.Config) *Manager {
 	}
 }
 
+// StartNetBird starts the NetBird daemon to register this service as a peer
+func (m *Manager) StartNetBird() error {
+	// First, ensure NetBird service is installed and started
+	logger.Info("Installing NetBird service...")
+	installCmd := exec.CommandContext(m.ctx, "netbird", "service", "install")
+	if err := installCmd.Run(); err != nil {
+		// Service might already be installed, which is fine
+		logger.Debug("Note: NetBird service install returned: %v (may already be installed)", err)
+	}
+
+	logger.Info("Starting NetBird service...")
+	startCmd := exec.CommandContext(m.ctx, "netbird", "service", "start")
+	var startStderr bytes.Buffer
+	startCmd.Stderr = &startStderr
+	if err := startCmd.Run(); err != nil {
+		errorOutput := startStderr.String()
+		// In Docker containers, service commands may not work (no systemd)
+		// Log a warning and continue - netbird up will start the daemon directly
+		logger.Warn("Failed to start NetBird service (this is expected in Docker containers): %v", err)
+		if errorOutput != "" {
+			logger.Debug("Service start error output: %s", errorOutput)
+		}
+		logger.Info("Proceeding with direct NetBird startup (netbird up will start daemon automatically)...")
+		// Ensure socket directory exists and is writable
+		socketDir := "/var/run"
+		if err := os.MkdirAll(socketDir, 0755); err != nil {
+			logger.Warn("Failed to create socket directory %s: %v", socketDir, err)
+		}
+		logger.Debug("Ensured socket directory exists: %s", socketDir)
+	} else {
+		// Service started successfully, wait a moment for it to be ready
+		logger.Debug("NetBird service started successfully, waiting for readiness...")
+		time.Sleep(2 * time.Second)
+	}
+
+	// Now connect to the network using netbird up in foreground mode
+	logger.Info("Connecting to NetBird network...")
+	args := []string{
+		"up",
+		"--foreground-mode", // Run in foreground for Docker containers
+		"--setup-key=" + m.config.SetupKey,
+		"--management-url=" + m.config.ManagementURL,
+		"--hostname=" + m.config.Hostname,
+		"--log-level=" + m.config.LogLevel,
+	}
+
+	// Add DNS labels - critical for service discovery
+	if len(m.config.DNSLabels) > 0 {
+		labelsStr := strings.Join(m.config.DNSLabels, ",")
+		args = append(args, "--extra-dns-labels", labelsStr)
+		logger.Info("Setting DNS labels: %s", labelsStr)
+		logger.Info("This DNS service will be discoverable at: %s.<netbird-domain>", m.config.DNSLabels[0])
+	}
+
+	cmd := exec.CommandContext(m.ctx, "netbird", args...)
+
+	// Log the exact command for debugging
+	logger.Debug("Executing command: netbird %s", strings.Join(args, " "))
+
+	// Capture both stdout and stderr to detect errors
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = io.MultiWriter(os.Stdout, &stdout)
+	cmd.Stderr = io.MultiWriter(os.Stderr, &stderr)
+
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("failed to start NetBird: %w", err)
+	}
+
+	// Wait briefly to detect immediate failures
+	time.Sleep(2 * time.Second)
+	errOutput := stderr.String()
+
+	// Check for known error patterns in stderr
+	if strings.Contains(errOutput, "unknown flag") && strings.Contains(errOutput, "extra-dns-labels") {
+		cmd.Process.Kill()
+		return fmt.Errorf("NetBird version does not support --extra-dns-labels flag. Please ensure you're using NetBird v0.32.0 or later")
+	}
+
+	// Check if process is still running
+	if err := cmd.Process.Signal(syscall.Signal(0)); err != nil {
+		if errOutput != "" {
+			return fmt.Errorf("NetBird process exited immediately: %s", errOutput)
+		}
+		return fmt.Errorf("NetBird process exited immediately: %v", err)
+	}
+
+	process := &Process{
+		name:    "netbird",
+		cmd:     cmd,
+		running: true,
+	}
+
+	m.mu.Lock()
+	m.processes = append(m.processes, process)
+	m.mu.Unlock()
+
+	logger.Info("Started NetBird with PID: %d", cmd.Process.Pid)
+
+	// Monitor the process
+	go m.monitorProcess(process)
+
+	// Give NetBird a moment to stabilize
+	time.Sleep(2 * time.Second)
+
+	// Final check that the process is still running
+	if err := cmd.Process.Signal(syscall.Signal(0)); err != nil {
+		output := stderr.String()
+		if output == "" {
+			output = stdout.String()
+		}
+		logger.Error("NetBird process failed to stay running. Output: %s", output)
+		return fmt.Errorf("NetBird process failed to stay running")
+	}
+
+	return nil
+}
+
+// WaitForNetBirdConnection waits for NetBird connection to be established
+func (m *Manager) WaitForNetBirdConnection() error {
+	logger.Info("Waiting for NetBird connection to be established...")
+
+	// In foreground mode, NetBird runs directly - wait for initial connection setup
+	logger.Info("NetBird is running in foreground mode, waiting for initial connection setup...")
+
+	// Check that the NetBird process is still running
+	m.mu.RLock()
+	var netbirdProcess *Process
+	for _, p := range m.processes {
+		if p.name == "netbird" {
+			netbirdProcess = p
+			break
+		}
+	}
+	m.mu.RUnlock()
+
+	if netbirdProcess == nil {
+		return fmt.Errorf("NetBird process not found")
+	}
+
+	// Check if process is still running
+	if err := netbirdProcess.cmd.Process.Signal(syscall.Signal(0)); err != nil {
+		return fmt.Errorf("NetBird process is not running")
+	}
+
+	// Wait for NetBird to establish its initial connections
+	waitTime := 5 * time.Second
+	logger.Info("Waiting %v for NetBird to establish connections...", waitTime)
+	time.Sleep(waitTime)
+
+	logger.Info("NetBird process is running, proceeding with CoreDNS startup")
+
+	return nil
+}
 
 // StartCoreDNS starts the CoreDNS server with the specified config file
 func (m *Manager) StartCoreDNS(corefilePath string) error {

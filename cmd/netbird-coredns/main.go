@@ -25,11 +25,6 @@ A CoreDNS plugin for managing custom DNS records via API.
 By Christian De Leon (https://github.com/christian-deleon/netbird-coredns)
 `
 
-var (
-	globalProcessManager *process.Manager
-	globalConfig         *config.Config
-)
-
 func main() {
 	// Check for help flag
 	if len(os.Args) > 1 && (os.Args[1] == "-h" || os.Args[1] == "--help" || os.Args[1] == "help") {
@@ -67,6 +62,11 @@ func main() {
 	}
 
 	logger.Info("Configuration loaded:")
+	logger.Info("  Management URL: %s", cfg.ManagementURL)
+	logger.Info("  Hostname: %s", cfg.Hostname)
+	if len(cfg.DNSLabels) > 0 {
+		logger.Info("  DNS Labels: %s", strings.Join(cfg.DNSLabels, ", "))
+	}
 	logger.Info("  Domains: %s", strings.Join(cfg.Domains, ", "))
 	logger.Info("  Forward to: %s", cfg.ForwardTo)
 	logger.Info("  DNS Port: %d", cfg.DNSPort)
@@ -114,9 +114,20 @@ func main() {
 
 	// Create process manager
 	processManager := process.NewManager(cfg)
-	globalProcessManager = processManager
-	globalConfig = cfg
 
+	// Start NetBird peer registration
+	logger.Info("Starting NetBird peer registration...")
+	if err := processManager.StartNetBird(); err != nil {
+		logger.Fatal("Failed to start NetBird: %v", err)
+	}
+
+	// Wait for NetBird connection
+	if err := processManager.WaitForNetBirdConnection(); err != nil {
+		logger.Fatal("Failed to establish NetBird connection: %v", err)
+	}
+
+	logger.Info("NetBird connection established successfully")
+	logger.Info("This DNS service is now discoverable via NetBird DNS")
 
 	// Start CoreDNS
 	logger.Info("Starting CoreDNS...")
@@ -143,10 +154,14 @@ func printUsage() {
 
 Environment Variables (all prefixed with NBDNS_):
   NBDNS_DOMAINS           Comma-separated domains for DNS resolution (required)
+  NBDNS_SETUP_KEY         NetBird setup key for peer registration (required)
+  NBDNS_MANAGEMENT_URL    NetBird Management server URL (default: https://api.netbird.io)
+  NBDNS_HOSTNAME          Hostname for NetBird peer (default: nb-dns)
+  NBDNS_DNS_LABELS        DNS labels for service discovery (default: nb-dns)
   NBDNS_FORWARD_TO        Forward server for unresolved queries (default: 8.8.8.8)
   NBDNS_DNS_PORT          DNS server port (default: 5053)
   NBDNS_API_PORT          API server port (default: 8080)
-  NBDNS_REFRESH_INTERVAL  Refresh interval in seconds (default: 30)
+  NBDNS_REFRESH_INTERVAL  Refresh interval in seconds (default: 15)
   NBDNS_RECORDS_FILE      Path to DNS records file (default: /etc/nb-dns/records/records.json)
   NBDNS_LOG_LEVEL         Log level for the entire service (default: info)
 

@@ -1,0 +1,37 @@
+---
+alwaysApply: true
+---
+# Helm Chart Rules
+
+When working with this codebase, ensure that any changes that affect the Helm chart are properly reflected in the chart configuration.
+
+## Chart Synchronization
+
+Any codebase changes that affect deployment, configuration, or runtime behavior must be updated in the corresponding Helm chart files:
+
+- **Environment Variables**: When adding, removing, or modifying environment variables used by the application, update `chart/templates/deployment.yaml` and `chart/values.yaml` accordingly
+- **Configuration Options**: New configuration parameters should be added to `chart/values.yaml` with appropriate defaults and documentation
+- **Ports**: Changes to service ports must be reflected in the deployment template and values
+- **Volumes/Storage**: File paths, volume mounts, or storage requirements should be synchronized between application code and chart templates
+- **Dependencies**: New dependencies or resource requirements should be reflected in the chart values
+
+## Chart File Locations
+
+- Chart templates: `chart/templates/`
+- Chart values: `chart/values.yaml`
+- Chart metadata: `chart/Chart.yaml`
+
+## Best Practices
+
+- When adding new environment variables, support both direct values and secret references where appropriate
+- Provide sensible defaults in `values.yaml` with comments explaining usage
+- Keep chart templates consistent with the application's actual requirements
+- **Update `chart/README.md`** whenever chart configuration changes:
+  - Add new parameters to the appropriate configuration table
+  - Update installation examples if new parameters are required
+  - Add examples showing how to use new configuration options
+  - Update parameter descriptions and defaults
+- **Update main `README.md`** when:
+  - New environment variables are added (add to environment variables table)
+  - Helm chart features are added (update Kubernetes/Helm section)
+  - Cross-reference `chart/README.md` for detailed Helm documentation

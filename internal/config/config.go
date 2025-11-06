@@ -12,6 +12,12 @@ type Config struct {
 	// General configuration
 	LogLevel string
 
+	// NetBird configuration (for peer registration)
+	SetupKey      string
+	ManagementURL string
+	Hostname      string
+	DNSLabels     []string
+
 	// DNS configuration
 	Domains     []string
 	ForwardTo   string
@@ -103,11 +109,41 @@ func LoadFromEnv() (*Config, error) {
 		return nil, fmt.Errorf("invalid NBDNS_LOG_LEVEL value: %s. Must be one of: debug, info, warn, error", logLevel)
 	}
 
+	// Required: NetBird Setup Key (for peer registration)
+	config.SetupKey = os.Getenv("NBDNS_SETUP_KEY")
+	if config.SetupKey == "" {
+		return nil, fmt.Errorf("NBDNS_SETUP_KEY is required")
+	}
+
+	// Optional: NetBird Management URL (defaults to official service if not set)
+	config.ManagementURL = os.Getenv("NBDNS_MANAGEMENT_URL")
+	if config.ManagementURL == "" {
+		config.ManagementURL = "https://api.netbird.io"
+	}
+
+	// Optional: Hostname (defaults to nb-dns)
+	config.Hostname = os.Getenv("NBDNS_HOSTNAME")
+	if config.Hostname == "" {
+		config.Hostname = "nb-dns"
+	}
+
+	// Optional: DNS labels (defaults to nb-dns)
+	dnsLabelsStr := os.Getenv("NBDNS_DNS_LABELS")
+	if dnsLabelsStr != "" {
+		config.DNSLabels = parseList(dnsLabelsStr)
+	} else {
+		config.DNSLabels = []string{"nb-dns"}
+	}
+
 	return config, nil
 }
 
 // Validate ensures all required configuration is present and valid
 func (c *Config) Validate() error {
+	if c.SetupKey == "" {
+		return fmt.Errorf("setup key is required")
+	}
+
 	if len(c.Domains) == 0 {
 		return fmt.Errorf("at least one domain is required")
 	}

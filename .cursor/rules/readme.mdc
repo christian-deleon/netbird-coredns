@@ -1,0 +1,72 @@
+---
+alwaysApply: true
+---
+# README Documentation Rules
+
+When working with this codebase, ensure that both README files are kept up to date with all changes that affect documentation.
+
+## README Files
+
+This project has two README files that need to be maintained:
+
+1. **Main README.md** (`README.md`) - General application documentation, features, API, Docker usage
+2. **Helm Chart README.md** (`chart/README.md`) - Helm-specific installation, configuration, and deployment instructions
+
+## When to Update README Files
+
+### Main README.md (`README.md`)
+
+Update the main README.md whenever you make changes that affect:
+
+- **Environment Variables**: New, modified, or removed environment variables (add to configuration table)
+- **Configuration Options**: Changes to configuration structure or available options
+- **Features**: New features, functionality, or capabilities
+- **API Endpoints**: New or modified API endpoints
+- **Installation/Setup**: Changes to installation or setup procedures (Docker Compose)
+- **Usage Examples**: Updates that require changes to usage examples
+- **Dependencies**: Major changes to dependencies or requirements
+- **General Documentation**: Updates to architecture, troubleshooting, or project structure
+
+### Helm Chart README.md (`chart/README.md`)
+
+Update the Helm chart README.md whenever you make changes that affect:
+
+- **Helm Configuration**: New, modified, or removed Helm chart values
+- **Chart Parameters**: Changes to configurable parameters in `values.yaml`
+- **Installation Examples**: New Helm installation scenarios or examples
+- **Chart Features**: New chart capabilities (secrets, volumes, probes, etc.)
+- **Deployment Instructions**: Changes to Helm deployment procedures
+- **Chart File Structure**: Updates to chart templates or file organization
+
+## What to Update
+
+### Main README.md
+
+When making changes, ensure the following sections are synchronized:
+
+- **Configuration table**: Environment variables and their descriptions
+- **Quick Start guide**: If setup process changes (Docker Compose)
+- **Examples**: If usage patterns or commands change
+- **API documentation**: If endpoints or request/response formats change
+- **Kubernetes section**: Reference to Helm chart documentation
+- **Environment Variables table**: All `NBDNS_*` variables
+
+### Helm Chart README.md
+
+When making changes, ensure the following sections are synchronized:
+
+- **Configuration tables**: All Helm chart parameters (Core, DNS, NetBird, Storage, Probe)
+- **Examples section**: Installation examples using new/changed values
+- **Chart Files section**: If new templates or files are added
+- **Configuration parameters**: Parameter descriptions and defaults
+
+## Best Practices
+
+- Update both README files in the same commit or pull request as the code changes
+- When adding environment variables: Update both the main README.md configuration table AND the Helm chart README.md if it affects Helm deployment
+- When modifying Helm chart: Update `chart/README.md` with new parameters, examples, and configuration options
+- Ensure examples remain accurate and functional in both README files
+- Keep descriptions clear and concise
+- Update version numbers or compatibility notes if applicable
+- Test any code examples or commands in both README files before committing
+- Cross-reference between README files where appropriate (main README references chart/README.md for Helm details)
