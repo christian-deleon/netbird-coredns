@@ -1,6 +1,0 @@
-apiVersion: k3d.io/v1alpha5
-kind: Simple
-metadata:
-  name: netbird-coredns
-servers: 1
-agents: 2
