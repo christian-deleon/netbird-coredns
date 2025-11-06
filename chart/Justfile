@@ -1,5 +1,7 @@
 name := "netbird-coredns"
 image := "nb-dns:dev"
+k3d-config := "k3d.yaml"
+kubeconfig := "~/.kube/config"
 
 # List all commands
 list:
@@ -10,7 +12,7 @@ list:
 
 # Create k3d cluster
 create-cluster:
-    k3d cluster create {{ name }} --config k3d.yaml
+    k3d cluster create {{ name }} --config {{ k3d-config }}
 
 # Delete k3d cluster
 delete-cluster:
@@ -23,20 +25,20 @@ import-image:
 ########################################################
 # Helm
 
+_helm *args:
+    helm {{ args }} \
+        --namespace {{ name }} \
+        --kubeconfig {{ kubeconfig }} \
+        --kube-context k3d-{{ name }}
+
 # Install chart
 install:
-    helm upgrade --install \
-        {{ name }} . \
-        --namespace {{ name }} \
+    just _helm upgrade \
+        --install {{ name }} . \
         --create-namespace \
         --values values.yaml \
-        --values values-dev.yaml \
-        --kubeconfig ~/.kube/config \
-        --kube-context k3d-{{ name }}
+        --values values-dev.yaml
 
 # Uninstall chart
 uninstall:
-    helm uninstall {{ name }} \
-        --namespace {{ name }} \
-        --kubeconfig ~/.kube/config \
-        --kube-context k3d-{{ name }}
+    just _helm uninstall {{ name }}
