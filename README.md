@@ -38,6 +38,7 @@ cp example.env .env
 ```bash
 # Required settings
 NBDNS_DOMAINS=mydomain.com
+NBDNS_SETUP_KEY=your-netbird-setup-key
 
 # Optional settings
 NBDNS_FORWARD_TO=8.8.8.8
@@ -79,6 +80,10 @@ All environment variables are prefixed with `NBDNS_`:
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `NBDNS_DOMAINS` | Yes | - | Comma-separated domains for DNS resolution |
+| `NBDNS_SETUP_KEY` | Yes | - | NetBird setup key for peer registration |
+| `NBDNS_MANAGEMENT_URL` | No | `https://api.netbird.io` | NetBird Management server URL (use custom URL for self-hosted) |
+| `NBDNS_HOSTNAME` | No | `nb-dns` | Hostname for NetBird peer registration |
+| `NBDNS_DNS_LABELS` | No | `nb-dns` | DNS labels for service discovery (comma-separated) |
 | `NBDNS_FORWARD_TO` | No | `8.8.8.8` | Forward server for unresolved queries |
 | `NBDNS_DNS_PORT` | No | `5053` | DNS server port (use different port if 53 is in use) |
 | `NBDNS_API_PORT` | No | `8080` | API server port |
@@ -259,13 +264,15 @@ dig +short web.example.com @dns-server.example.com -p 5053
 
 ### Testing
 
-This service can be tested locally without any NetBird peer connection. It operates independently and only requires:
+To test the service:
 
-1. A configured domain in `NBDNS_DOMAINS`
-2. Access to the DNS port (default 5053)
-3. Access to the API port (default 8080) for managing records
-
-You can test the service locally using `localhost` or via a DNS hostname if the service is exposed in your network or Kubernetes cluster.
+1. Ensure you have a valid NetBird setup key from your NetBird Management console
+2. Configure the required environment variables (`NBDNS_DOMAINS` and `NBDNS_SETUP_KEY`)
+3. The service will register as a NetBird peer and become discoverable via the DNS label (default: `nb-dns`)
+4. Access the DNS service via:
+   - **localhost**: `dig +short web.example.com @localhost -p 5053`
+   - **NetBird DNS label**: `dig +short web.example.com @nb-dns.<netbird-domain>` (from other NetBird peers)
+5. Manage DNS records via the API on port 8080
 
 ## High Availability
 
@@ -429,11 +436,32 @@ This service is containerized and works with Kubernetes. It includes:
 - **Graceful shutdown**: Handles SIGTERM properly
 - **Container best practices**: Proper signal handling and resource management
 
+### Helm Chart
+
+A Helm chart is available for easy deployment to Kubernetes clusters. The chart includes:
+
+- Automated secret management for NetBird setup keys
+- Persistent volume for DNS records storage
+- Configurable probes and resource limits
+- Support for self-hosted NetBird Management servers
+
+**For detailed Helm installation and configuration instructions, see [chart/README.md](chart/README.md).**
+
+Quick start with Helm:
+
+```bash
+# Install from local chart
+cd chart
+helm install netbird-coredns . \
+  --set config.domains="mydomain.com" \
+  --namespace netbird-coredns \
+  --create-namespace
+```
+
 ## Roadmap
 
 ### Future Features
 
-- Kubernetes manifests and Helm charts
 - Authentication for API endpoints
 - Metrics and Prometheus integration
 - Comprehensive test suite

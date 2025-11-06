@@ -2,6 +2,9 @@
 list:
     just --list --unsorted
 
+########################################################
+# Go
+
 # Build the binary
 build:
     go build -o netbird-coredns ./cmd/netbird-coredns
@@ -10,29 +13,36 @@ build:
 run:
     go run ./cmd/netbird-coredns
 
+########################################################
+# Docker
+
 # Build Docker image
 docker-build:
-    docker compose -f docker/compose.yml build
+    docker build -t nb-dns:dev . -f docker/Dockerfile
+
+_docker-compose *args:
+    docker compose -f docker/compose.yml {{ args }}
 
 # Start services with Docker Compose
 start:
-    docker compose -f docker/compose.yml up -d --build
+    just docker-build
+    just _docker-compose up -d
 
 # Stop services
 stop:
-    docker compose -f docker/compose.yml down
+    just _docker-compose down
 
 # View logs
 logs:
-    docker compose -f docker/compose.yml logs -f
+    just _docker-compose logs -f
 
 # View processes
 ps:
-    docker compose -f docker/compose.yml ps
+    just _docker-compose ps
 
 # Stop and remove everything including volumes
 clean:
-    docker compose -f docker/compose.yml down -v
+    just _docker-compose down -v
 
 # Format code
 fmt:

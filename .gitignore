@@ -115,4 +115,5 @@ tags
 **/*.env
 !example.env
 
-netbird-coredns
+# Binary
+/netbird-coredns

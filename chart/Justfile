@@ -1,0 +1,42 @@
+name := "netbird-coredns"
+image := "nb-dns:dev"
+
+# List all commands
+list:
+    just --list --unsorted
+
+########################################################
+# K3d
+
+# Create k3d cluster
+create-cluster:
+    k3d cluster create {{ name }} --config k3d.yaml
+
+# Delete k3d cluster
+delete-cluster:
+    k3d cluster delete {{ name }}
+
+# Import image into k3d cluster
+import-image:
+    k3d image import {{ image }} --cluster {{ name }}
+
+########################################################
+# Helm
+
+# Install chart
+install:
+    helm upgrade --install \
+        {{ name }} . \
+        --namespace {{ name }} \
+        --create-namespace \
+        --values values.yaml \
+        --values values-dev.yaml \
+        --kubeconfig ~/.kube/config \
+        --kube-context k3d-{{ name }}
+
+# Uninstall chart
+uninstall:
+    helm uninstall {{ name }} \
+        --namespace {{ name }} \
+        --kubeconfig ~/.kube/config \
+        --kube-context k3d-{{ name }}
