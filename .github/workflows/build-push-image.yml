@@ -15,7 +15,7 @@ on:
 
 env:
   PLATFORMS: linux/amd64,linux/arm64
-  GHCR_IMAGE_URL: ghcr.io/${{ github.actor }}/netbird-coredns
+  GHCR_IMAGE_URL: ghcr.io/${{ github.actor }}/${{ github.event.repository.name }}
 
 jobs:
   build:
