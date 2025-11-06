@@ -1,24 +1,17 @@
-name: Build and Push Multi-Architecture Image to GHCR
+name: Build and Push Image and Publish Helm Chart
 
 on:
   workflow_dispatch:
   push:
     tags:
       - 'v*'
-    paths:
-      - '*.go'
-      - 'go.*'
-      - 'docker/Dockerfile'
-      - 'cmd/**'
-      - 'internal/**'
-      - 'pkg/**'
 
 env:
   PLATFORMS: linux/amd64,linux/arm64
   GHCR_IMAGE_URL: ghcr.io/${{ github.actor }}/${{ github.event.repository.name }}
 
 jobs:
-  build:
+  build-push-image:
     runs-on: ${{ matrix.runs_on }}
     timeout-minutes: 10
     strategy:
@@ -58,8 +51,8 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  manifest:
-    needs: build
+  build-push-image-manifest:
+    needs: build-push-image
     runs-on: ubuntu-latest
     steps:
       - name: Log in to GHCR
@@ -86,3 +79,46 @@ jobs:
             docker manifest push $IMAGE:$TAG
             echo "Pushed $IMAGE:$TAG"
           done
+
+  publish-chart:
+    needs: build-push-image-manifest
+    runs-on: ubuntu-latest
+    if: github.ref_type == 'tag'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.18.2
+
+      - name: Extract tag and update Chart.yaml and values.yaml
+        run: |
+          # Extract tag (remove 'v' prefix if present)
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#v}"
+          
+          # Update Chart.yaml - use same version for both chart and app version
+          sed -i "s/^version:.*/version: $VERSION/" chart/Chart.yaml
+          sed -i "s/^appVersion:.*/appVersion: $VERSION/" chart/Chart.yaml
+          
+          # Update values.yaml - image tag should include 'v' prefix
+          sed -i "s/^  tag:.*/  tag: $TAG/" chart/values.yaml
+          
+          echo "Version: $VERSION"
+          echo "Image tag: $TAG"
+
+      - name: Package Helm Chart
+        run: |
+          helm package chart/ --destination docs/
+
+      - name: Update Helm Repo Index
+        run: |
+          helm repo index docs/ --url https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
