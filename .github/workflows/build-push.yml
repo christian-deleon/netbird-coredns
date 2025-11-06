@@ -15,7 +15,7 @@ on:
 
 env:
   PLATFORMS: linux/amd64,linux/arm64
-  GHCR_IMAGE_URL: ghcr.io/${{ github.actor }}/netbird-coredns
+  GHCR_IMAGE_URL: ghcr.io/${{ github.repository_owner }}/netbird-coredns
 
 jobs:
   build:
@@ -44,7 +44,7 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
+          username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and Push Image
@@ -67,7 +67,7 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
+          username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create and push manifest
