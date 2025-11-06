@@ -174,7 +174,7 @@ func (s *Storage) load() error {
 func (s *Storage) save() error {
 	// Create temp file for atomic write
 	tempFile := s.filePath + ".tmp"
-	
+
 	file, err := os.OpenFile(tempFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to create temp file: %w", err)
@@ -215,4 +215,3 @@ func (s *Storage) Reload() error {
 
 	return s.load()
 }
-

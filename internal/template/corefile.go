@@ -75,4 +75,3 @@ func (g *Generator) WriteCorefile(cfg *config.Config, outputPath string) error {
 
 	return nil
 }
-

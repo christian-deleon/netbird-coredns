@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/coredns/coredns/plugin"
-	"github.com/coredns/coredns/request"
 	clog "github.com/coredns/coredns/plugin/pkg/log"
+	"github.com/coredns/coredns/request"
 	"github.com/miekg/dns"
 )
 
@@ -81,4 +81,3 @@ func (n *NetBird) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg
 	// No custom records found, pass to next plugin
 	return plugin.NextOrFailure(n.Name(), n.Next, ctx, w, r)
 }
-

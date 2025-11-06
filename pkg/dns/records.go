@@ -87,4 +87,3 @@ func isValidDomain(domain string) bool {
 
 	return true
 }
-

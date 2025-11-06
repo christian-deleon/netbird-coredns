@@ -13,6 +13,14 @@ build:
 run:
     go run ./cmd/netbird-coredns
 
+# Format code
+format:
+    go fmt ./...
+
+# Tidy dependencies
+tidy:
+    go mod tidy
+
 ########################################################
 # Docker
 
@@ -43,11 +51,3 @@ ps:
 # Stop and remove everything including volumes
 clean:
     just _docker-compose down -v
-
-# Format code
-fmt:
-    go fmt ./...
-
-# Tidy dependencies
-tidy:
-    go mod tidy

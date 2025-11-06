@@ -4,4 +4,3 @@ package netbird
 
 // Re-export the plugin from internal/plugin for CoreDNS compatibility
 import _ "netbird-coredns/internal/plugin"
-

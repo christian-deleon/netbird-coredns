@@ -55,4 +55,3 @@ func setup(c *caddy.Controller) error {
 
 	return nil
 }
-
