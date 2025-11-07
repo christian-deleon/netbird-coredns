@@ -1,4 +1,7 @@
-# NetBird CoreDNS Integration
+# NetBird CoreDNS
+
+> [!WARNING]  
+> This project is in alpha and should not be used in production environments.
 
 A CoreDNS plugin for managing custom DNS records via HTTP API. This service is containerized and works with Kubernetes.
 
