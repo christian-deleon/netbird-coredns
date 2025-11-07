@@ -27,7 +27,7 @@ helm repo update
 ```bash
 # Clone the repository
 git clone https://github.com/christian-deleon/netbird-coredns.git
-cd netbird-coredns/chart
+cd netbird-coredns/helm
 
 # Install the chart
 helm install netbird-coredns . --namespace netbird-coredns --create-namespace

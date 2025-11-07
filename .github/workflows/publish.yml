@@ -100,18 +100,18 @@ jobs:
           VERSION="${TAG#v}"
           
           # Update Chart.yaml - use same version for both chart and app version
-          sed -i "s/^version:.*/version: $VERSION/" chart/Chart.yaml
-          sed -i "s/^appVersion:.*/appVersion: $VERSION/" chart/Chart.yaml
+          sed -i "s/^version:.*/version: $VERSION/" helm/Chart.yaml
+          sed -i "s/^appVersion:.*/appVersion: $VERSION/" helm/Chart.yaml
           
           # Update values.yaml - image tag should include 'v' prefix
-          sed -i "s/^  tag:.*/  tag: $TAG/" chart/values.yaml
+          sed -i "s/^  tag:.*/  tag: $TAG/" helm/values.yaml
           
           echo "Version: $VERSION"
           echo "Image tag: $TAG"
 
       - name: Package Helm Chart
         run: |
-          helm package chart/ --destination docs/
+          helm package helm/ --destination docs/
 
       - name: Update Helm Repo Index
         run: |

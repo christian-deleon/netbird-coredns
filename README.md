@@ -445,13 +445,13 @@ A Helm chart is available for easy deployment to Kubernetes clusters. The chart 
 - Configurable probes and resource limits
 - Support for self-hosted NetBird Management servers
 
-**For detailed Helm installation and configuration instructions, see [chart/README.md](chart/README.md).**
+**For detailed Helm installation and configuration instructions, see [helm/README.md](helm/README.md).**
 
 Quick start with Helm:
 
 ```bash
 # Install from local chart
-cd chart
+cd helm
 helm install netbird-coredns . \
   --set config.domains="mydomain.com" \
   --namespace netbird-coredns \

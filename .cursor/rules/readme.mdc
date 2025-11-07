@@ -10,7 +10,7 @@ When working with this codebase, ensure that both README files are kept up to da
 This project has two README files that need to be maintained:
 
 1. **Main README.md** (`README.md`) - General application documentation, features, API, Docker usage
-2. **Helm Chart README.md** (`chart/README.md`) - Helm-specific installation, configuration, and deployment instructions
+2. **Helm Chart README.md** (`helm/README.md`) - Helm-specific installation, configuration, and deployment instructions
 
 ## When to Update README Files
 
@@ -27,7 +27,7 @@ Update the main README.md whenever you make changes that affect:
 - **Dependencies**: Major changes to dependencies or requirements
 - **General Documentation**: Updates to architecture, troubleshooting, or project structure
 
-### Helm Chart README.md (`chart/README.md`)
+### Helm Chart README.md (`helm/README.md`)
 
 Update the Helm chart README.md whenever you make changes that affect:
 
@@ -64,9 +64,9 @@ When making changes, ensure the following sections are synchronized:
 
 - Update both README files in the same commit or pull request as the code changes
 - When adding environment variables: Update both the main README.md configuration table AND the Helm chart README.md if it affects Helm deployment
-- When modifying Helm chart: Update `chart/README.md` with new parameters, examples, and configuration options
+- When modifying Helm chart: Update `helm/README.md` with new parameters, examples, and configuration options
 - Ensure examples remain accurate and functional in both README files
 - Keep descriptions clear and concise
 - Update version numbers or compatibility notes if applicable
 - Test any code examples or commands in both README files before committing
-- Cross-reference between README files where appropriate (main README references chart/README.md for Helm details)
+- Cross-reference between README files where appropriate (main README references helm/README.md for Helm details)
