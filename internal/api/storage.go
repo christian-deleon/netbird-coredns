@@ -47,6 +47,11 @@ func (s *Storage) GetRecord(domain, name string) (*dns.Record, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
+	// Normalize "@" to empty string for root domain records
+	if name == "@" {
+		name = ""
+	}
+
 	domainRecords, ok := s.records[domain]
 	if !ok {
 		return nil, fmt.Errorf("no records found for domain: %s", domain)
@@ -54,6 +59,9 @@ func (s *Storage) GetRecord(domain, name string) (*dns.Record, error) {
 
 	record, ok := domainRecords[name]
 	if !ok {
+		if name == "" {
+			return nil, fmt.Errorf("record not found: %s (root domain)", domain)
+		}
 		return nil, fmt.Errorf("record not found: %s.%s", name, domain)
 	}
 
@@ -107,6 +115,12 @@ func (s *Storage) SetRecord(record *dns.Record) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	// Normalize "@" to empty string for root domain records
+	name := record.Name
+	if name == "@" {
+		name = ""
+	}
+
 	// Ensure domain map exists
 	if s.records[record.Domain] == nil {
 		s.records[record.Domain] = make(map[string]*dns.Record)
@@ -117,7 +131,10 @@ func (s *Storage) SetRecord(record *dns.Record) error {
 		record.TTL = 60
 	}
 
-	s.records[record.Domain][record.Name] = record
+	// Create a copy with normalized name for storage
+	recordCopy := *record
+	recordCopy.Name = name
+	s.records[record.Domain][name] = &recordCopy
 
 	// Persist to disk
 	return s.save()
@@ -128,12 +145,20 @@ func (s *Storage) DeleteRecord(domain, name string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	// Normalize "@" to empty string for root domain records
+	if name == "@" {
+		name = ""
+	}
+
 	domainRecords, ok := s.records[domain]
 	if !ok {
 		return fmt.Errorf("no records found for domain: %s", domain)
 	}
 
 	if _, ok := domainRecords[name]; !ok {
+		if name == "" {
+			return fmt.Errorf("record not found: %s (root domain)", domain)
+		}
 		return fmt.Errorf("record not found: %s.%s", name, domain)
 	}
 

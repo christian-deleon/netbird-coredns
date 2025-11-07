@@ -200,6 +200,27 @@ curl -X POST http://localhost:8080/api/v1/records \
     "type": "CNAME",
     "value": "web.example.com"
   }'
+
+# Create root domain record (for example.com itself)
+# Use empty string "" or "@" for the name field
+curl -X POST http://localhost:8080/api/v1/records \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "",
+    "domain": "example.com",
+    "type": "A",
+    "value": "192.168.1.1"
+  }'
+
+# Alternative: using "@" symbol for root domain
+curl -X POST http://localhost:8080/api/v1/records \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "@",
+    "domain": "example.com",
+    "type": "A",
+    "value": "192.168.1.1"
+  }'
 ```
 
 #### Update a Record

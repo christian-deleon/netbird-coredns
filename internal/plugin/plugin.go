@@ -102,9 +102,36 @@ func (n *NetBird) lookupCustomRecord(queryName string) (record, bool) {
 		return record{}, false
 	}
 
+	// Check if this is a root domain query (query name exactly matches a configured domain)
+	queryNameTrimmed := strings.TrimSuffix(queryName, ".")
+	for _, domain := range n.Domains {
+		if queryNameTrimmed == domain {
+			// This is a root domain query
+			clog.Debugf("Looking up root domain record: domain=%s", domain)
+			customRecord, err := n.storage.GetRecord(domain, "")
+			if err != nil {
+				clog.Debugf("Root domain record lookup failed: %v", err)
+				return record{}, false
+			}
+			clog.Debugf("Found root domain record: %+v", customRecord)
+
+			var rec record
+			switch customRecord.Type {
+			case "A":
+				rec.IPv4 = net.ParseIP(customRecord.Value)
+				return rec, true
+			case "CNAME":
+				// For CNAME, we need to resolve the target
+				// This is handled differently in serve.go
+				return record{}, false
+			}
+			return rec, true
+		}
+	}
+
 	// Parse domain and name from query
 	// queryName is in format: "name.domain."
-	parts := strings.Split(strings.TrimSuffix(queryName, "."), ".")
+	parts := strings.Split(queryNameTrimmed, ".")
 	if len(parts) < 2 {
 		return record{}, false
 	}
@@ -145,8 +172,31 @@ func (n *NetBird) ResolveCNAME(queryName string) (string, bool) {
 		return "", false
 	}
 
+	// Check if this is a root domain query (query name exactly matches a configured domain)
+	queryNameTrimmed := strings.TrimSuffix(queryName, ".")
+	for _, domain := range n.Domains {
+		if queryNameTrimmed == domain {
+			// This is a root domain query
+			customRecord, err := n.storage.GetRecord(domain, "")
+			if err != nil {
+				return "", false
+			}
+
+			if customRecord.Type == "CNAME" {
+				// Ensure CNAME value ends with dot
+				target := customRecord.Value
+				if !strings.HasSuffix(target, ".") {
+					target += "."
+				}
+				return target, true
+			}
+
+			return "", false
+		}
+	}
+
 	// Parse domain and name from query
-	parts := strings.Split(strings.TrimSuffix(queryName, "."), ".")
+	parts := strings.Split(queryNameTrimmed, ".")
 	if len(parts) < 2 {
 		return "", false
 	}

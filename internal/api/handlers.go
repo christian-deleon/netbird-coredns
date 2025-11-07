@@ -79,6 +79,11 @@ func (s *Server) UpdateRecordHandler(w http.ResponseWriter, r *http.Request) {
 	domain := pathParts[0]
 	name := pathParts[1]
 
+	// Normalize "@" to empty string for root domain records
+	if name == "@" {
+		name = ""
+	}
+
 	var record dns.Record
 	if err := json.NewDecoder(r.Body).Decode(&record); err != nil {
 		http.Error(w, fmt.Sprintf("Invalid request body: %v", err), http.StatusBadRequest)
@@ -117,6 +122,11 @@ func (s *Server) DeleteRecordHandler(w http.ResponseWriter, r *http.Request) {
 
 	domain := pathParts[0]
 	name := pathParts[1]
+
+	// Normalize "@" to empty string for root domain records
+	if name == "@" {
+		name = ""
+	}
 
 	if err := s.storage.DeleteRecord(domain, name); err != nil {
 		http.Error(w, fmt.Sprintf("Failed to delete record: %v", err), http.StatusNotFound)

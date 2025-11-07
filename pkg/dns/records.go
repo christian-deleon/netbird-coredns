@@ -25,9 +25,8 @@ type Record struct {
 
 // Validate checks if a record is valid
 func (r *Record) Validate() error {
-	if r.Name == "" {
-		return fmt.Errorf("record name cannot be empty")
-	}
+	// Name can be empty for root domain records (represented as "" or "@")
+	// Empty name is allowed - it represents the root domain itself
 	if r.Domain == "" {
 		return fmt.Errorf("record domain cannot be empty")
 	}
@@ -58,6 +57,10 @@ func (r *Record) Validate() error {
 
 // FQDN returns the fully qualified domain name for this record
 func (r *Record) FQDN() string {
+	// For root domain records (empty name), return just the domain
+	if r.Name == "" || r.Name == "@" {
+		return fmt.Sprintf("%s.", r.Domain)
+	}
 	return fmt.Sprintf("%s.%s.", r.Name, r.Domain)
 }
 
