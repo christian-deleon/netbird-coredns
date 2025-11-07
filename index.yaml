@@ -2,11 +2,11 @@ apiVersion: v1
 entries:
   netbird-coredns:
   - apiVersion: v2
-    appVersion: 0.4.1
-    created: "2025-11-07T16:40:12.981299237Z"
+    appVersion: 0.5.0
+    created: "2025-11-07T22:27:09.596472549Z"
     description: A Helm chart for NetBird CoreDNS - DNS server with custom DNS records
       management via HTTP API
-    digest: bc2f50383e17c8b022b99f714ee564203217c774872d37bb14076c1937f23698
+    digest: 8eaab359f9bf00907b1fa9470e9dfda5fd6c988cfb04c8d9914d568bc4842d03
     home: https://github.com/christian-deleon/netbird-coredns
     keywords:
     - dns
@@ -17,6 +17,6 @@ entries:
     name: netbird-coredns
     type: application
     urls:
-    - https://christian-deleon.github.io/netbird-coredns/netbird-coredns-0.4.1.tgz
-    version: 0.4.1
-generated: "2025-11-07T16:40:12.980738488Z"
+    - https://christian-deleon.github.io/netbird-coredns/netbird-coredns-0.5.0.tgz
+    version: 0.5.0
+generated: "2025-11-07T22:27:09.595924759Z"
