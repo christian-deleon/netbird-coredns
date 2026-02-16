@@ -1,12 +1,12 @@
 # Stage: Clone CoreDNS (cache this separately - only invalidates if CoreDNS version changes)
-FROM golang:1.25-alpine AS coredns-source
+FROM golang:1.26-alpine AS coredns-source
 RUN apk add --no-cache git
 WORKDIR /coredns
 RUN git clone --depth 1 --branch v1.13.1 https://github.com/coredns/coredns.git . && \
     git checkout v1.13.1
 
 # Stage: Build netbird-coredns binary
-FROM golang:1.25-alpine AS netbird-builder
+FROM golang:1.26-alpine AS netbird-builder
 WORKDIR /app
 
 # Copy go module files
@@ -26,7 +26,7 @@ COPY plugin.go ./
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o netbird-coredns ./cmd/netbird-coredns
 
 # Stage: Build CoreDNS with plugin
-FROM golang:1.25-alpine AS coredns-builder
+FROM golang:1.26-alpine AS coredns-builder
 WORKDIR /app
 
 # Copy the netbird-coredns binary from previous stage
@@ -56,7 +56,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     go build -o coredns .
 
 # Runtime stage
-FROM alpine:3.22
+FROM alpine:3.23
 
 # Install runtime dependencies
 RUN apk add --no-cache \
